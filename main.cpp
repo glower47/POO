@@ -9,6 +9,7 @@ using namespace std;
 
 class Bikes                   ///*************************************//BIKES//*****************************************///
 {
+protected:
     static int nrBiciclete;
     const int ID = rand() % INT_MAX + 1000000;
     char *bikeName;
@@ -61,6 +62,7 @@ public:
         this->lungime_cadru = 0;
         this->price = 0;
     }
+
 
     void setName(char* bikeName){
 
@@ -153,10 +155,10 @@ public:
 
     friend ostream& operator <<(ostream &out, Bikes &bike);
 
-    const Bikes operator++(int){
+    /*const Bikes operator++(int){
         this->nrBiciclete ++;
         return *this;
-    }
+    }*/
 
 
 
@@ -455,7 +457,8 @@ class Employs
     double salariu;
     char sectie[256];
     bool friendly;
-    pair<int, int> rating_from_costumers;            /// FROM 1 TO 10;
+    pair<int, int> rating_from_costumers;            /// FROM 1 TO 10, prima componenta reprezinta nota, iar cea de-a doua componenta
+                                                    ///  reprezinta numarul de rating-uri primite;
     bool privacy;
 
 public:
@@ -591,15 +594,187 @@ public:
 
 };
 
-///  ***WORK IN PROGRESS**  ///
-/*class Clienti{
+class BikesForChildren:public Bikes{             ///            ***MOSTENIRE 1***          ///
+    bool rotiAjutatoare;
+    float dimensiuneRoti;
+    vector <Bikes> lista;
+    float pret;
+
+public:
+    BikesForChildren():Bikes(){
+
+        this->rotiAjutatoare = false;
+        this->dimensiuneRoti = 0;
+    }
+
+    BikesForChildren(bool rotiAjutatoare, float dimensiuneRoti):Bikes(bikeName, used, lungime_cadru, tip, price){
+
+        this->rotiAjutatoare = rotiAjutatoare;
+        this->dimensiuneRoti = dimensiuneRoti;
+    }
+
+    friend ostream& operator<<(ostream& out, const BikesForChildren& bike){
+
+        out << (Bikes&)bike;
+        out << "Roti ajutatoare: " << bike.rotiAjutatoare << "\n";
+        out << "Dimensiune roti: " << bike.dimensiuneRoti << "\n";
+        return out;
+    }
+
+    friend istream& operator>>(istream& in, BikesForChildren& bike){
+
+        in >> (Bikes&)bike;
+        cout << "Are bicicleta roti ajutatoare?: ";
+        in >> bike.rotiAjutatoare;
+        cout << "\n";
+        cout << "Dimensiune roti: ";
+        in >> bike.dimensiuneRoti;
+        cout << "\n";
+        return in;
+    }
+
+
+
+};
+
+///  ***WORK IN PROGRESS***  ///
+///  ***CLASA ABSTRACTA***   ///
+
+class Client{
+
+protected:
 
     const int ID = rand() % INT_MAX + 1000000;
     char* nume;
     float buget;
+    int nr = 0;
+
     vector<Bikes> lista_cumparaturi;
 
-};*/
+public:
+    Client(){
+
+        this->nume = new char[strlen("Necunoscut") + 1];
+        strcpy(this->nume, "Necunoscut");
+        this->buget = 0;
+    }
+
+    Client(char* nume, float buget){
+
+        this->nume = new char[strlen(nume) + 1];
+        strcpy(this->nume, nume);
+        this->buget = buget;
+    }
+
+    virtual void addBike(Bikes &bike){
+
+        if(this->buget > bike.getPrice()){
+            nr ++;
+            lista_cumparaturi.push_back(bike);
+            this->buget -= bike.getPrice();
+        }else{
+            cout << "Bugetul dumneavoastra este insuficient! \n";
+        }
+
+    }
+
+    virtual void setNume(char* nume){
+        this->nume = new char[strlen(nume) + 1];
+        strcpy(this->nume, nume);
+    }
+
+    virtual void setBuget(float buget){
+        this->buget = buget;
+    }
+    virtual void getBuget(){
+        cout << this->buget << "\n";
+    }
+
+
+    friend ostream& operator<<(ostream& out, Client& client){
+        out << "Numele clientului: " << client.nume << "\n";
+        out << "Bugetul clientului: " << client.buget << "\n";
+        out << "Lista de cumparaturi a clientului: \n\n";
+        for(int i = 0; i < client.nr; i ++){
+            out << client.lista_cumparaturi[i] << "\n";
+        }
+
+        return out;
+    }
+
+    friend istream& operator>>(istream& in, Client& client){
+        char tmp[256];
+        cout << "Numele Clientului: ";
+        in >> tmp;
+        client.nume = new char[strlen(tmp) + 1];
+        strcpy(client.nume, tmp);
+        cout << "Bugetul Clientului: ";
+        in >> client.buget;
+        return in;
+
+    }
+
+
+
+};
+
+class ClientFidel:public Client{          ///                ***MOSTENIRE 2***            ///
+
+    float aniFidelitate;
+
+public:
+
+    ClientFidel():Client(){
+        this->aniFidelitate = 0;
+
+    }
+
+    ClientFidel(float aniFidelitate):Client(nume, buget){
+        this->aniFidelitate = aniFidelitate;
+
+    }
+
+    void addBike(Bikes& bike){
+        float reducere = this->aniFidelitate * 10;
+        if(this->aniFidelitate > 7)reducere = 70;
+        if(this->buget > bike.getPrice() * (reducere / 100)){
+            nr ++;
+            lista_cumparaturi.push_back(bike);
+            this->buget -= bike.getPrice() * (reducere / 100);
+        }else{
+            cout << "Bugetul dumneavoastra este insuficient! \n";
+        }
+
+    }
+
+    void setNume(char* nume){
+        this->nume = new char[strlen(nume) + 1];
+        strcpy(this->nume, nume);
+    }
+
+    void setFidelitate(float aniFidelitate){
+        this->aniFidelitate = aniFidelitate;
+
+    }
+
+    friend ostream& operator<<(ostream& out, const ClientFidel& client){
+
+        out << (Client&)client;
+        out << "Ani fidelitate: " << client.aniFidelitate << "\n";
+        return out;
+    }
+
+    friend istream& operator>>(istream& in, ClientFidel& client){
+
+        in >> (Client&)client;
+        cout << "Cati ani de fidelitate are clientul?: ";
+        in >> client.aniFidelitate;
+        cout << "\n";
+        return in;
+    }
+
+};
+
 ///  ***WORK IN PROGRESS**  ///
 
 
@@ -622,6 +797,8 @@ int main()
     float lungime;
     double price;
     int n, comanda;
+    char* nume;
+    float buget;
 
     ifstream file("file.txt");
     file >> n;
@@ -630,8 +807,13 @@ int main()
     Bikes bike2("DASDASDASDASas", true, 14.2, "mountain", 9200);
     Bikes bike3(bike1);
 
-    bike1 = bike2;
-
+    /*Client client1("Gigel", 10000);
+    ClientFidel client2;
+    cin >> client2;
+    client1.addBike(bike1);
+    client2.addBike(bike1);
+    cout << client1;
+    cout << "\n" << client2;*/
 
     ///bike1(bike2);     ///constructor copiere
     ///bike2++;          ///post incrementare
@@ -663,11 +845,47 @@ int main()
         }
     }
     cout << "    ****Bun venit la fima de biciclete Andrei Trache SRL, unde gasiti biciclete exact pe gustul dumneavoastra, de la biciclete noi, pana la biciclete second-hand. You are invited to take a look: ***\n";
+    cout << "\nVa rugam sa va introduceti numele: ";
+    char tmp[256];
+    cin >> tmp;
+    nume = new char[strlen(tmp) + 1];
+    strcpy(nume, tmp);
+    cout << "Sunteti client fidel? (sunteti considerat client fidel daca aveti cel putin jumatate de an de parteneriat cu firma noastra): ";
+    string fidelitate;
+    bool fidel;
+    cin >> fidelitate;
+    Client client;
+    ClientFidel fclient;
+    if(fidelitate == "da"){
+        fidel = true;
+        cout << "\nDeoarece ati afirmat ca sunteti client fidel, va rugam sa introduceti durata parteneriatului cu firma noastra: ";
+        float ani;
+        cin >> ani;
+        if(ani > 0.5){
+            fclient.setNume(nume);
+            fclient.setFidelitate(ani);
+            cout << "Felicitari, ati fost inregistrat ca si client fidel si puteti beneficia de reduceri la produsele noastre in functie de durata parteneriatului! \n";
+            cout << "Va rugam sa introduceti bugetul de care beneficiati pentru a efectua cumparaturi: ";
+            cin >> buget;
+            fclient.setBuget(buget);
+        }else{
+            cout << "Durata introdusa este mai mica de 0.5, deci nu sunteti client fidel. \n";
+        }
+    }else if(fidelitate == "nu"){
+        fidel = false;
+        cout << "Ati fost inregistrat ca si client nou deoarece nu ati afirmat ca sunteti client fidel al firmei \n";
+        cout << "Va rugam sa introduceti bugetul de care beneficiati pentru a efectua cumparaturi: ";
+        cin >> buget;
+        client.setNume(nume);
+        client.setBuget(buget);
+    }
+
     while(exit == false){
         cout << "**Lista comenzi: \n";
         cout << "**______________________________________________________**\n";
         cout << "->> Apasa 1 pentru a vedea listele de stocuri disponibile; \n";
         cout << "->> Apasa 2 pentru a adauga o bicicleta in stoc; \n";
+        cout << "->> Apasa 3 pentru a vedea bugetul disponibil \n";
         cout << "->> Apasa 0 pentru a parasi meniul; \n";
         cout << "**______________________________________________________**\n";
         cin >> comanda;
@@ -750,6 +968,13 @@ int main()
             }
             break;
             }
+        case 3:{
+            cout << "Bugetul dumneavoastra este: ";
+            if(fidel)fclient.getBuget();
+            else client.getBuget();
+            break;
+
+        }
         case 0:{
             exit = true;
             break;}
